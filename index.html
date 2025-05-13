@@ -1,20 +1,55 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Contact support</title>
+  <title>Contact Support</title>
   <style>
-    .whatsapp-btn { background: #25D366; color: white; padding: 15px 30px; border-radius: 8px; font-size: 18px; }
+    body {
+      font-family: Arial, sans-serif;
+      text-align: center;
+      padding: 50px 20px;
+    }
+    h1 {
+      color: #333;
+      margin-bottom: 30px;
+    }
+    .whatsapp-btn {
+      background: #25D366; /* WhatsApp official green */
+      color: white;
+      padding: 15px 30px;
+      border-radius: 8px;
+      font-size: 18px;
+      text-decoration: none;
+      display: inline-block;
+      margin: 20px auto;
+      transition: background-color 0.3s;
+    }
+    .whatsapp-btn:hover {
+      background: #128C7E; /* Darker WhatsApp green */
+    }
   </style>
 </head>
 <body>
-  <h1>Chào mừng bạn đến với dịch vụ của chúng tôi!</h1>
+  <h1>Welcome to our service!</h1>
   <script>
-    const numbers = ["971507622509.", "971503278305", "971505027917", "971507622509" ]; //
+    const numbers = [
+      "971502795250", 
+      "971503278305", 
+      "971521993354",
+      "971505027917",
+      "971507622509",
+      //
+    ];
+    
+    // Select a random number
     const randomNum = numbers[Math.floor(Math.random() * numbers.length)];
+    
+    // Create WhatsApp button
     document.write(`
-      <a href="https://wa.me/${randomNum}" class="whatsapp-btn">
-        Click here for WhatsApp chatting
-      </a>
+      <div>
+        <a href="https://wa.me/${randomNum}" class="whatsapp-btn">
+          Click here to chat on WhatsApp
+        </a>
+      </div>
     `);
   </script>
 </body>
