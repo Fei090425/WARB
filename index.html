@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Contact support</title>
+  <style>
+    .whatsapp-btn { background: #25D366; color: white; padding: 15px 30px; border-radius: 8px; font-size: 18px; }
+  </style>
+</head>
+<body>
+  <h1>Chào mừng bạn đến với dịch vụ của chúng tôi!</h1>
+  <script>
+    const numbers = ["971507622509.", "971503278305", "971505027917", "971507622509" ]; //
+    const randomNum = numbers[Math.floor(Math.random() * numbers.length)];
+    document.write(`
+      <a href="https://wa.me/${randomNum}" class="whatsapp-btn">
+        Click here for WhatsApp chatting
+      </a>
+    `);
+  </script>
+</body>
+</html>
