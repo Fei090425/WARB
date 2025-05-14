@@ -1,56 +1,54 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <title>Contact Support</title>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      text-align: center;
-      padding: 50px 20px;
-    }
-    h1 {
-      color: #333;
-      margin-bottom: 30px;
-    }
-    .whatsapp-btn {
-      background: #25D366; /* WhatsApp official green */
-      color: white;
-      padding: 15px 30px;
-      border-radius: 8px;
-      font-size: 18px;
-      text-decoration: none;
-      display: inline-block;
-      margin: 20px auto;
-      transition: background-color 0.3s;
-    }
-    .whatsapp-btn:hover {
-      background: #128C7E; /* Darker WhatsApp green */
-    }
-  </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Connecting to WhatsApp...</title>
+
+  <!-- Google Tag Manager -->
+  <script>
+    (function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+    new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+    j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+    'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+    })(window,document,'script','dataLayer','GTM-WTN2XPL2'); // <--- Replace with your GTM ID
+  </script>
+  <!-- End Google Tag Manager -->
 </head>
 <body>
-  <h1>Welcome to our service!</h1>
+  <!-- Google Tag Manager (noscript) -->
+  <noscript>
+    <iframe src="https://www.googletagmanager.com/ns.html?id=GTM-WTN2XPL2"
+    height="0" width="0" style="display:none;visibility:hidden"></iframe>
+  </noscript>
+  <!-- End Google Tag Manager (noscript) -->
+
+  <h2 style="text-align: center; margin-top: 50px;">Connecting you to a WhatsApp consultant...</h2>
+
   <script>
     const numbers = [
       "971502795250", 
       "971503278305", 
       "971521993354",
       "971505027917",
-      "971507622509",
-      //
+      "971507622509"
     ];
-    
-    // Select a random number
-    const randomNum = numbers[Math.floor(Math.random() * numbers.length)];
-    
-    // Create WhatsApp button
-    document.write(`
-      <div>
-        <a href="https://wa.me/${randomNum}" class="whatsapp-btn">
-          Click here to chat on WhatsApp
-        </a>
-      </div>
-    `);
+
+    const randomIndex = Math.floor(Math.random() * numbers.length);
+    const phone = numbers[randomIndex];
+    const redirectUrl = `https://wa.me/${phone}`;
+
+    // Push tracking info to dataLayer for GA4
+    window.dataLayer = window.dataLayer || [];
+    dataLayer.push({
+      event: 'whatsapp_click',
+      event_label: phone
+    });
+
+    // Automatically redirect after 0.8s to ensure GTM logs the event
+    setTimeout(() => {
+      window.location.href = redirectUrl;
+    }, 800);
   </script>
 </body>
 </html>
