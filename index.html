@@ -100,24 +100,31 @@
     ];
 
     let redirectUrl = "";
-    function logRedirect(phone) {
+    // Ghi lại thời gian trang được load để tính thời gian chờ
+    const pageLoadTime = Date.now();
+
+    function logRedirect(eventType, extraData = {}) {
       const timestamp = new Date().toISOString();
       database.ref('redirects').push({
-        phone: phone,
+        phone: currentPhone,
         timestamp: timestamp,
         userAgent: navigator.userAgent,
-        ip: ""
+        event: eventType, // event kiểu: page_load, auto_redirect, click_redirect
+        waitTimeMs: Date.now() - pageLoadTime,
+        ...extraData
       });
     }
 
-    // Chọn số ngẫu nhiên và tạo URL redirect
     function prepareRedirectUrl() {
       const randomIndex = Math.floor(Math.random() * numbers.length);
-      const phone = numbers[randomIndex];
+      currentPhone = numbers[randomIndex];
       const message = encodeURIComponent("Hi, I want to apply!");
-      redirectUrl = `https://wa.me/${phone}?text=${message}`;
-      return phone;
+      redirectUrl = `https://wa.me/${currentPhone}?text=${message}`;
+      return currentPhone;
     }
+
+    // Khai báo biến lưu số điện thoại hiện tại
+    let currentPhone = "";
 
     // Đếm ngược 1 giây và redirect
     let count = 1;
@@ -126,13 +133,17 @@
 
     function startRedirect() {
       const phone = prepareRedirectUrl();
-      logRedirect(phone);
+
+      // Log ngay khi trang được load
+      logRedirect('page_load');
 
       const interval = setInterval(() => {
         countdownEl.textContent = count;
         count--;
         if (count < 0) {
           clearInterval(interval);
+          // Log trước khi redirect tự động
+          logRedirect('auto_redirect');
           window.location.href = redirectUrl;
         }
       }, 1000);
@@ -140,6 +151,11 @@
       // Hiện nút bấm thủ công phòng trường hợp redirect tự động không hoạt động
       manualBtn.href = redirectUrl;
       manualBtn.style.display = "inline-block";
+
+      manualBtn.addEventListener('click', () => {
+        // Log event khi khách bấm thủ công
+        logRedirect('click_redirect');
+      });
     }
 
     startRedirect();
