@@ -2,21 +2,86 @@
 <html>
 <head>
   <title>WhatsApp Redirect Stats</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-database-compat.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/luxon@3.4.4/build/global/luxon.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
   <style>
-    body { font-family: Arial, padding: 20px; }
-    table { border-collapse: collapse; width: 100%; }
-    th, td { padding: 10px; border: 1px solid #ddd; }
+    body {
+      font-family: Arial, sans-serif;
+      padding: 20px;
+      margin: 0;
+      background: #f4f4f4;
+    }
+    h1, h2, h3 {
+      margin-top: 30px;
+    }
+    table {
+      border-collapse: collapse;
+      width: 100%;
+      background: #fff;
+    }
+    th, td {
+      padding: 10px;
+      border: 1px solid #ddd;
+      text-align: center;
+    }
+    .flex {
+      display: flex;
+      gap: 20px;
+      flex-wrap: wrap;
+      align-items: flex-end;
+      margin-bottom: 20px;
+    }
+    input[type="date"] {
+      padding: 6px;
+      font-size: 14px;
+    }
+    button {
+      padding: 8px 16px;
+      font-size: 14px;
+      margin-left: 10px;
+      cursor: pointer;
+    }
+    .chart-wrapper {
+      overflow-x: auto;
+      max-width: 100%;
+    }
+    canvas {
+      max-height: 250px;
+    }
+    @media (max-width: 768px) {
+      .flex {
+        flex-direction: column;
+        align-items: stretch;
+      }
+      canvas {
+        width: 100% !important;
+        height: auto !important;
+      }
+    }
   </style>
 </head>
 <body>
   <h1>📊 WhatsApp Redirect Statistics</h1>
-  
-  <div style="display: flex;">
-    <div style="width: 60%;">
+
+  <div class="flex">
+    <div>
+      <label>From: <input type="date" id="fromDate"></label>
+    </div>
+    <div>
+      <label>To: <input type="date" id="toDate"></label>
+    </div>
+    <button onclick="applyFilter()">Apply Filter</button>
+    <button onclick="exportCSV()">Export CSV</button>
+  </div>
+
+  <h3>Total Redirects: <span id="totalCount">0</span></h3>
+
+  <div class="flex">
+    <div style="flex: 1 1 60%;">
       <h3>Details by Phone Number</h3>
       <table id="statsTable">
         <thead>
@@ -29,13 +94,34 @@
         <tbody></tbody>
       </table>
     </div>
-    <div style="width: 40%;">
-      <canvas id="chart" height="300"></canvas>
+    <div style="flex: 1 1 35%;">
+      <div class="chart-wrapper">
+        <canvas id="phoneChart"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <h2>📱 Device Type Statistics</h2>
+  <div class="flex">
+    <div style="flex: 1 1 40%;">
+      <table>
+        <thead>
+          <tr>
+            <th>Device Type</th>
+            <th>Redirect Count</th>
+          </tr>
+        </thead>
+        <tbody id="deviceTable"></tbody>
+      </table>
+    </div>
+    <div style="flex: 1 1 50%;">
+      <div class="chart-wrapper">
+        <canvas id="deviceChart"></canvas>
+      </div>
     </div>
   </div>
 
   <script>
-    // Firebase config
     const firebaseConfig = {
       apiKey: "AIzaSyB1p0Q_gMsPYKL-ZIE--ZGw6pIyF7VM0Bw",
       authDomain: "redirect-counter.firebaseapp.com",
@@ -44,52 +130,79 @@
     };
     firebase.initializeApp(firebaseConfig);
 
-    // Fetch and process data
-    firebase.database().ref('redirects').on('value', (snapshot) => {
-      const data = snapshot.val();
-      const stats = {};
-      
-      // Aggregate by phone number
-      Object.values(data).forEach(entry => {
-        if (!stats[entry.phone]) stats[entry.phone] = { count: 0, lastTime: '' };
-        stats[entry.phone].count++;
-        stats[entry.phone].lastTime = entry.timestamp;
+    let allData = [];
+
+    firebase.database().ref('redirects').on('value', snapshot => {
+      allData = Object.values(snapshot.val() || {});
+      applyFilter();
+    });
+
+    function detectDevice(userAgent) {
+      const ua = (userAgent || "").toLowerCase();
+      if (/mobile|android|iphone|ipad|ipod/.test(ua)) return "Mobile";
+      return "Desktop";
+    }
+
+    function applyFilter() {
+      const fromDate = document.getElementById('fromDate').value;
+      const toDate = document.getElementById('toDate').value;
+
+      const from = fromDate ? luxon.DateTime.fromISO(fromDate).startOf('day') : null;
+      const to = toDate ? luxon.DateTime.fromISO(toDate).endOf('day') : null;
+
+      const filtered = allData.filter(entry => {
+        const time = luxon.DateTime.fromISO(entry.timestamp);
+        if (from && time < from) return false;
+        if (to && time > to) return false;
+        return true;
       });
 
-      // Update table
-      const tableBody = document.querySelector('#statsTable tbody');
-      tableBody.innerHTML = '';
-      Object.entries(stats).forEach(([phone, info]) => {
-        const formattedTime = luxon.DateTime
-          .fromISO(info.lastTime)
-          .setZone("Asia/Dubai")
-          .toFormat("yyyy-MM-dd HH:mm:ss");
-        
-        tableBody.innerHTML += `
-          <tr>
-            <td>${phone}</td>
-            <td>${info.count}</td>
-            <td>${formattedTime}</td>
-          </tr>
-        `;
+      renderStats(filtered);
+    }
+
+    function renderStats(data) {
+      const phoneStats = {};
+      const deviceStats = { Mobile: 0, Desktop: 0 };
+      let total = 0;
+
+      data.forEach(entry => {
+        const phone = entry.phone;
+        const device = detectDevice(entry.userAgent);
+        const time = entry.timestamp;
+
+        if (!phoneStats[phone]) phoneStats[phone] = { count: 0, lastTime: '' };
+        phoneStats[phone].count++;
+        phoneStats[phone].lastTime = time;
+
+        deviceStats[device]++;
+        total++;
       });
 
-      // Render chart
-      new Chart(document.getElementById('chart'), {
+      document.getElementById("totalCount").textContent = total;
+
+      const tbody = document.querySelector('#statsTable tbody');
+      tbody.innerHTML = '';
+      Object.entries(phoneStats).forEach(([phone, stat]) => {
+        const time = luxon.DateTime.fromISO(stat.lastTime).setZone("Asia/Dubai").toFormat("yyyy-MM-dd HH:mm:ss");
+        tbody.innerHTML += `<tr><td>${phone}</td><td>${stat.count}</td><td>${time}</td></tr>`;
+      });
+
+      // Phone chart
+      const phoneCanvas = document.getElementById('phoneChart');
+      if (Chart.getChart(phoneCanvas)) Chart.getChart(phoneCanvas).destroy();
+      new Chart(phoneCanvas, {
         type: 'bar',
         data: {
-          labels: Object.keys(stats),
+          labels: Object.keys(phoneStats),
           datasets: [{
             label: 'Redirect Count',
-            data: Object.values(stats).map(s => s.count),
+            data: Object.values(phoneStats).map(s => s.count),
             backgroundColor: '#25D366'
           }]
         },
         options: {
           responsive: true,
-          plugins: {
-            legend: { display: false }
-          },
+          plugins: { legend: { display: false } },
           scales: {
             x: {
               ticks: { autoSkip: false, maxRotation: 90, minRotation: 45 }
@@ -97,7 +210,53 @@
           }
         }
       });
-    });
+
+      // Device table
+      const deviceTable = document.getElementById("deviceTable");
+      deviceTable.innerHTML = '';
+      Object.entries(deviceStats).forEach(([type, count]) => {
+        deviceTable.innerHTML += `<tr><td>${type}</td><td>${count}</td></tr>`;
+      });
+
+      // Device chart
+      const deviceCanvas = document.getElementById('deviceChart');
+      if (Chart.getChart(deviceCanvas)) Chart.getChart(deviceCanvas).destroy();
+      new Chart(deviceCanvas, {
+        type: 'doughnut',
+        data: {
+          labels: Object.keys(deviceStats),
+          datasets: [{
+            label: 'Device Count',
+            data: Object.values(deviceStats),
+            backgroundColor: ['#36A2EB', '#FF6384']
+          }]
+        },
+        options: {
+          responsive: true,
+          plugins: {
+            legend: { position: 'bottom' }
+          }
+        }
+      });
+    }
+
+    function exportCSV() {
+      const csv = Papa.unparse(
+        allData.map(item => ({
+          phone: item.phone,
+          timestamp: item.timestamp,
+          ua: item.userAgent,
+          device: detectDevice(item.userAgent)
+        }))
+      );
+      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+      const link = document.createElement("a");
+      link.href = URL.createObjectURL(blob);
+      link.setAttribute("download", "whatsapp_redirects.csv");
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
   </script>
 </body>
 </html>
