@@ -1,19 +1,18 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <!-- Google tag (gtag.js) -->
-<script async src="https://www.googletagmanager.com/gtag/js?id=G-YXLTL6E24L"></script>
-<script>
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
-  gtag('js', new Date());
-
-  gtag('config', 'G-YXLTL6E24L');
-</script>
-
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Connecting to WhatsApp...</title>
+
+  <!-- GA4 gtag.js -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-Z1V56QT385"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){ dataLayer.push(arguments); }
+    gtag('js', new Date());
+    gtag('config', 'G-Z1V56QT385');
+  </script>
 
   <!-- Google Tag Manager -->
   <script>
@@ -21,9 +20,10 @@
     new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
     j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
     'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
-    })(window,document,'script','dataLayer','GTM-WTN2XPL2'); // <--- Replace with your GTM ID
+    })(window,document,'script','dataLayer','GTM-WTN2XPL2'); // Thay bằng GTM ID nếu cần
   </script>
   <!-- End Google Tag Manager -->
+
 </head>
 <body>
   <!-- Google Tag Manager (noscript) -->
@@ -33,7 +33,9 @@
   </noscript>
   <!-- End Google Tag Manager (noscript) -->
 
-  <h2 style="text-align: center; margin-top: 50px;">Connecting you to a WhatsApp consultant...</h2>
+  <h2 style="text-align: center; margin-top: 50px;">
+    Connecting you to a WhatsApp consultant...
+  </h2>
 
   <script>
     const numbers = [
@@ -48,14 +50,78 @@
     const phone = numbers[randomIndex];
     const redirectUrl = `https://wa.me/${phone}`;
 
-    // Push tracking info to dataLayer for GA4
-    window.dataLayer = window.dataLayer || [];
-    dataLayer.push({
-      event: 'whatsapp_click',
+    // Gửi sự kiện trực tiếp đến GA4 qua gtag
+    gtag('event', 'whatsapp_click', {
+      event_category: 'engagement',
       event_label: phone
     });
 
-    // Automatically redirect after 0.8s to ensure GTM logs the event
+    // Chờ 800ms để đảm bảo event gửi đi xong mới redirect
+    setTimeout(() => {
+      window.location.href = redirectUrl;
+    }, 800);
+  </script>
+</body>
+</html>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Connecting to WhatsApp...</title>
+
+  <!-- GA4 gtag.js -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-Z1V56QT385"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){ dataLayer.push(arguments); }
+    gtag('js', new Date());
+    gtag('config', 'G-Z1V56QT385');
+  </script>
+
+  <!-- Google Tag Manager -->
+  <script>
+    (function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+    new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+    j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+    'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+    })(window,document,'script','dataLayer','GTM-WTN2XPL2'); // Thay bằng GTM ID nếu cần
+  </script>
+  <!-- End Google Tag Manager -->
+
+</head>
+<body>
+  <!-- Google Tag Manager (noscript) -->
+  <noscript>
+    <iframe src="https://www.googletagmanager.com/ns.html?id=GTM-WTN2XPL2"
+    height="0" width="0" style="display:none;visibility:hidden"></iframe>
+  </noscript>
+  <!-- End Google Tag Manager (noscript) -->
+
+  <h2 style="text-align: center; margin-top: 50px;">
+    Connecting you to a WhatsApp consultant...
+  </h2>
+
+  <script>
+    const numbers = [
+      "971502795250", 
+      "971503278305", 
+      "971521993354",
+      "971505027917",
+      "971507622509"
+    ];
+
+    const randomIndex = Math.floor(Math.random() * numbers.length);
+    const phone = numbers[randomIndex];
+    const redirectUrl = `https://wa.me/${phone}`;
+
+    // Gửi sự kiện trực tiếp đến GA4 qua gtag
+    gtag('event', 'whatsapp_click', {
+      event_category: 'engagement',
+      event_label: phone
+    });
+
+    // Chờ 800ms để đảm bảo event gửi đi xong mới redirect
     setTimeout(() => {
       window.location.href = redirectUrl;
     }, 800);
