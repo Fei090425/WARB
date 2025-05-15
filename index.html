@@ -43,17 +43,35 @@
       font-size: 24px;
       margin: 20px 0;
     }
+    .redirect-button {
+      margin-top: 30px;
+      padding: 12px 25px;
+      font-size: 16px;
+      background-color: #25D366;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      text-decoration: none;
+      display: inline-block;
+    }
+    .redirect-button:hover {
+      background-color: #1ebe5b;
+    }
   </style>
 </head>
 <body>
-  <img src="https://upload.wikimedia.org/wikipedia/commons/6/6b/WhatsApp.svg" alt="WhatsApp Logo" class="whatsapp-logo">
+  <img src="https://upload.wikimedia.org/wikipedia/commons/6/6b/WhatsApp.svg" alt="WhatsApp Logo" class="whatsapp-logo" />
   <h2>Connecting you to a WhatsApp consultant...</h2>
   <div class="loader"></div>
-  <div class="counter" id="countdown">3</div>
-  <p>Please wait while we connect you to our support team</p>
-  
+  <div class="counter" id="countdown">1</div>
+  <p>Please wait while we connect you to our support team.</p>
+
+  <!-- Nút chuyển hướng thủ công -->
+  <a href="#" id="manualRedirect" class="redirect-button" style="display:none;">Click here to chat on WhatsApp</a>
+
   <script>
-    // Your Firebase Config
+    // Firebase config
     const firebaseConfig = {
       apiKey: "AIzaSyB1p0Q_gMsPYKL-ZIE--ZGw6pIyF7VM0Bw",
       authDomain: "redirect-counter.firebaseapp.com",
@@ -64,12 +82,9 @@
       appId: "1:391634495922:web:351ccbfbc1f6bc1726dcab",
       measurementId: "G-YBYT9P6V6S"
     };
-
-    // Initialize Firebase
     firebase.initializeApp(firebaseConfig);
     const database = firebase.database();
 
-    // List of WhatsApp numbers
     const numbers = [
       "971565372252",
       "971502795250",
@@ -84,43 +99,50 @@
       "971527120317"
     ];
 
-    // Log redirect to Firebase
+    let redirectUrl = "";
     function logRedirect(phone) {
       const timestamp = new Date().toISOString();
       database.ref('redirects').push({
         phone: phone,
         timestamp: timestamp,
         userAgent: navigator.userAgent,
-        ip: "" // IP retrieval removed since it's client-side
+        ip: ""
       });
     }
 
-    // Countdown and redirect
-    let count = 3;
-    const countdownEl = document.getElementById('countdown');
-    const countdownInterval = setInterval(() => {
-      count--;
-      countdownEl.textContent = count;
-      if (count <= 0) {
-        clearInterval(countdownInterval);
-        redirectToWhatsApp();
-      }
-    }, 1000);
-
-    function redirectToWhatsApp() {
+    // Chọn số ngẫu nhiên và tạo URL redirect
+    function prepareRedirectUrl() {
       const randomIndex = Math.floor(Math.random() * numbers.length);
       const phone = numbers[randomIndex];
-      const message = encodeURIComponent("I want to apply");
-      const redirectUrl = `https://wa.me/${phone}?text=${message}`;
-      
-      // Log to Firebase
-      logRedirect(phone);
-      
-      // Redirect after logging
-      setTimeout(() => {
-        window.location.href = redirectUrl;
-      }, 300);
+      const message = encodeURIComponent("Hi, I want to apply!");
+      redirectUrl = `https://wa.me/${phone}?text=${message}`;
+      return phone;
     }
+
+    // Đếm ngược 1 giây và redirect
+    let count = 1;
+    const countdownEl = document.getElementById('countdown');
+    const manualBtn = document.getElementById('manualRedirect');
+
+    function startRedirect() {
+      const phone = prepareRedirectUrl();
+      logRedirect(phone);
+
+      const interval = setInterval(() => {
+        countdownEl.textContent = count;
+        count--;
+        if (count < 0) {
+          clearInterval(interval);
+          window.location.href = redirectUrl;
+        }
+      }, 1000);
+
+      // Hiện nút bấm thủ công phòng trường hợp redirect tự động không hoạt động
+      manualBtn.href = redirectUrl;
+      manualBtn.style.display = "inline-block";
+    }
+
+    startRedirect();
   </script>
 </body>
 </html>
