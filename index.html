@@ -4,139 +4,141 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Connecting to WhatsApp...</title>
+  
+  <!-- Meta tags for SEO -->
+  <meta name="description" content="Connecting you to a WhatsApp support agent...">
+  <meta property="og:title" content="WhatsApp Connection - WARB">
+  <meta property="og:description" content="Redirecting you to customer support...">
+  
+  <!-- Firebase SDK -->
+  <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-database-compat.js"></script>
 
-  <!-- GA4 gtag.js -->
-  <script async src="https://www.googletagmanager.com/gtag/js?id=G-YXLTL6E24L"></script>
-  <script>
-    window.dataLayer = window.dataLayer || [];
-    function gtag(){ dataLayer.push(arguments); }
-    gtag('js', new Date());
-    gtag('config', 'G-YXLTL6E24L');
-  </script>
-
-  <!-- Google Tag Manager -->
-  <script>
-    (function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
-    new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
-    j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
-    'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
-    })(window,document,'script','dataLayer','GTM-WTN2XPL2'); // Thay bằng GTM ID nếu cần
-  </script>
-  <!-- End Google Tag Manager -->
-
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      text-align: center;
+      padding: 50px 20px;
+      background-color: #f5f5f5;
+      color: #333;
+    }
+    .loader {
+      margin: 30px auto;
+      border: 5px solid #f3f3f3;
+      border-top: 5px solid #25D366; /* WhatsApp green */
+      border-radius: 50%;
+      width: 50px;
+      height: 50px;
+      animation: spin 1s linear infinite;
+    }
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+    .whatsapp-logo {
+      width: 80px;
+      margin-bottom: 20px;
+    }
+    .cancel-btn {
+      margin-top: 20px;
+      padding: 8px 20px;
+      background: #e74c3c;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    .counter {
+      font-size: 24px;
+      margin: 20px 0;
+    }
+  </style>
 </head>
 <body>
-  <!-- Google Tag Manager (noscript) -->
-  <noscript>
-    <iframe src="https://www.googletagmanager.com/ns.html?id=GTM-WTN2XPL2"
-    height="0" width="0" style="display:none;visibility:hidden"></iframe>
-  </noscript>
-  <!-- End Google Tag Manager (noscript) -->
-
-  <h2 style="text-align: center; margin-top: 50px;">
-    Connecting you to a WhatsApp consultant...
-  </h2>
+  <img src="https://upload.wikimedia.org/wikipedia/commons/6/6b/WhatsApp.svg" alt="WhatsApp Logo" class="whatsapp-logo">
+  <h2>Connecting you to a WhatsApp consultant...</h2>
+  <div class="loader"></div>
+  <div class="counter" id="countdown">5</div>
+  <p>Please wait while we connect you to our support team</p>
+  
+  <button class="cancel-btn" id="cancelRedirect">Cancel</button>
 
   <script>
+    // Your Firebase Config
+    const firebaseConfig = {
+      apiKey: "AIzaSyB1p0Q_gMsPYKL-ZIE--ZGw6pIyF7VM0Bw",
+      authDomain: "redirect-counter.firebaseapp.com",
+      databaseURL: "https://redirect-counter-default-rtdb.asia-southeast1.firebasedatabase.app",
+      projectId: "redirect-counter",
+      storageBucket: "redirect-counter.firebasestorage.app",
+      messagingSenderId: "391634495922",
+      appId: "1:391634495922:web:351ccbfbc1f6bc1726dcab",
+      measurementId: "G-YBYT9P6V6S"
+    };
+
+    // Initialize Firebase
+    firebase.initializeApp(firebaseConfig);
+    const database = firebase.database();
+
+    // List of WhatsApp numbers
     const numbers = [
       "971565372252",
-"971502795250",
-"971589539179",
-"971521993354",
-"971568747453",
-"971504872017",
-"971505238625",
-"971507520749",
-"971507339917",
-"971555653226",
-"971527120317",
+      "971502795250",
+      "971589539179",
+      "971521993354",
+      "971568747453",
+      "971504872017",
+      "971505238625",
+      "971507520749",
+      "971507339917",
+      "971555653226",
+      "971527120317"
     ];
 
-    const randomIndex = Math.floor(Math.random() * numbers.length);
-    const phone = numbers[randomIndex];
-    const redirectUrl = `https://wa.me/${phone}`;
+    // Log redirect to Firebase
+    function logRedirect(phone) {
+      const timestamp = new Date().toISOString();
+      database.ref('redirects').push({
+        phone: phone,
+        timestamp: timestamp,
+        userAgent: navigator.userAgent,
+        ip: "<?php echo $_SERVER['REMOTE_ADDR']; ?>" // Get IP if using PHP
+      });
+    }
 
-    // Gửi sự kiện trực tiếp đến GA4 qua gtag
-    gtag('event', 'whatsapp_click', {
-      event_category: 'engagement',
-      event_label: phone
+    // Countdown and redirect
+    let count = 5;
+    const countdownEl = document.getElementById('countdown');
+    const countdownInterval = setInterval(() => {
+      count--;
+      countdownEl.textContent = count;
+      if (count <= 0) {
+        clearInterval(countdownInterval);
+        redirectToWhatsApp();
+      }
+    }, 1000);
+
+    function redirectToWhatsApp() {
+      const randomIndex = Math.floor(Math.random() * numbers.length);
+      const phone = numbers[randomIndex];
+      const redirectUrl = `https://wa.me/${phone}`;
+      
+      // Log to Firebase
+      logRedirect(phone);
+      
+      // Redirect after logging
+      setTimeout(() => {
+        window.location.href = redirectUrl;
+      }, 300);
+    }
+
+    // Cancel redirect if user clicks button
+    document.getElementById('cancelRedirect').addEventListener('click', () => {
+      clearInterval(countdownInterval);
+      document.querySelector('h2').textContent = 'Redirect cancelled';
+      document.querySelector('.loader').style.display = 'none';
+      countdownEl.style.display = 'none';
     });
-
-    // Chờ 800ms để đảm bảo event gửi đi xong mới redirect
-    setTimeout(() => {
-      window.location.href = redirectUrl;
-    }, 800);
-  </script>
-</body>
-</html>
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Connecting to WhatsApp...</title>
-
-  <!-- GA4 gtag.js -->
-  <script async src="https://www.googletagmanager.com/gtag/js?id=G-Z1V56QT385"></script>
-  <script>
-    window.dataLayer = window.dataLayer || [];
-    function gtag(){ dataLayer.push(arguments); }
-    gtag('js', new Date());
-    gtag('config', 'G-Z1V56QT385');
-  </script>
-
-  <!-- Google Tag Manager -->
-  <script>
-    (function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
-    new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
-    j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
-    'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
-    })(window,document,'script','dataLayer','GTM-WTN2XPL2'); // Thay bằng GTM ID nếu cần
-  </script>
-  <!-- End Google Tag Manager -->
-
-</head>
-<body>
-  <!-- Google Tag Manager (noscript) -->
-  <noscript>
-    <iframe src="https://www.googletagmanager.com/ns.html?id=GTM-WTN2XPL2"
-    height="0" width="0" style="display:none;visibility:hidden"></iframe>
-  </noscript>
-  <!-- End Google Tag Manager (noscript) -->
-
-  <h2 style="text-align: center; margin-top: 50px;">
-    Connecting you to a WhatsApp consultant...
-  </h2>
-
-  <script>
-    const numbers = [
-     "971565372252",
-"971502795250",
-"971589539179",
-"971521993354",
-"971568747453",
-"971504872017",
-"971505238625",
-"971507520749",
-"971507339917",
-"971555653226",
-"971527120317",
-    ];
-
-    const randomIndex = Math.floor(Math.random() * numbers.length);
-    const phone = numbers[randomIndex];
-    const redirectUrl = `https://wa.me/${phone}`;
-
-    // Gửi sự kiện trực tiếp đến GA4 qua gtag
-    gtag('event', 'whatsapp_click', {
-      event_category: 'engagement',
-      event_label: phone
-    });
-
-    // Chờ 800ms để đảm bảo event gửi đi xong mới redirect
-    setTimeout(() => {
-      window.location.href = redirectUrl;
-    }, 800);
   </script>
 </body>
 </html>
