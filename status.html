@@ -202,15 +202,32 @@
       const fromHour = parseInt(document.getElementById('fromHour').value) || 0;
       const toHour = parseInt(document.getElementById('toHour').value) || 23;
 
-      const from = luxon.DateTime.fromISO(fromDate).setZone('Asia/Dubai')
+      // Kiểm tra giá trị fromDate và toDate có hợp lệ không (khắc phục lỗi trên mobile)
+      if (!fromDate || !toDate || isNaN(Date.parse(fromDate)) || isNaN(Date.parse(toDate))) {
+        console.warn('Invalid date inputs detected. Showing all data without filtering by date.');
+        renderStats(allData);
+        return;
+      }
+
+      // Tạo datetime theo timezone Dubai, set giờ, phút, giây
+      const from = luxon.DateTime.fromISO(fromDate, { zone: 'Asia/Dubai' })
         .set({ hour: fromHour, minute: 0, second: 0, millisecond: 0 });
-      
-      const to = luxon.DateTime.fromISO(toDate).setZone('Asia/Dubai')
+
+      const to = luxon.DateTime.fromISO(toDate, { zone: 'Asia/Dubai' })
         .set({ hour: toHour, minute: 59, second: 59, millisecond: 999 });
 
+      console.log('Filter from:', from.toISO());
+      console.log('Filter to:', to.toISO());
+
+      // Lọc dữ liệu dựa trên timestamp (chuyển timestamp sang timezone Dubai)
       const filtered = allData.filter(entry => {
-        const time = luxon.DateTime.fromISO(entry.timestamp).setZone('Asia/Dubai');
-        return time >= from && time <= to;
+        try {
+          const time = luxon.DateTime.fromISO(entry.timestamp, { zone: 'Asia/Dubai' });
+          return time >= from && time <= to;
+        } catch (e) {
+          console.warn('Invalid timestamp for entry:', entry);
+          return false;
+        }
       });
 
       renderStats(filtered);
