@@ -5,6 +5,7 @@
   <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-database-compat.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/luxon@3.4.4/build/global/luxon.min.js"></script>
   <style>
     body { font-family: Arial, padding: 20px; }
     table { border-collapse: collapse; width: 100%; }
@@ -22,7 +23,7 @@
           <tr>
             <th>Phone Number</th>
             <th>Redirect Count</th>
-            <th>Last Redirect</th>
+            <th>Last Redirect (UAE Time)</th>
           </tr>
         </thead>
         <tbody></tbody>
@@ -34,7 +35,7 @@
   </div>
 
   <script>
-    // Use the same firebaseConfig as the main page
+    // Firebase config
     const firebaseConfig = {
       apiKey: "AIzaSyB1p0Q_gMsPYKL-ZIE--ZGw6pIyF7VM0Bw",
       authDomain: "redirect-counter.firebaseapp.com",
@@ -43,32 +44,37 @@
     };
     firebase.initializeApp(firebaseConfig);
 
-    // Fetch data from Firebase
+    // Fetch and process data
     firebase.database().ref('redirects').on('value', (snapshot) => {
       const data = snapshot.val();
       const stats = {};
       
-      // Count redirects
+      // Aggregate by phone number
       Object.values(data).forEach(entry => {
         if (!stats[entry.phone]) stats[entry.phone] = { count: 0, lastTime: '' };
         stats[entry.phone].count++;
         stats[entry.phone].lastTime = entry.timestamp;
       });
 
-      // Display table
+      // Update table
       const tableBody = document.querySelector('#statsTable tbody');
       tableBody.innerHTML = '';
       Object.entries(stats).forEach(([phone, info]) => {
+        const formattedTime = luxon.DateTime
+          .fromISO(info.lastTime)
+          .setZone("Asia/Dubai")
+          .toFormat("yyyy-MM-dd HH:mm:ss");
+        
         tableBody.innerHTML += `
           <tr>
             <td>${phone}</td>
             <td>${info.count}</td>
-            <td>${new Date(info.lastTime).toLocaleString()}</td>
+            <td>${formattedTime}</td>
           </tr>
         `;
       });
 
-      // Draw chart
+      // Render chart
       new Chart(document.getElementById('chart'), {
         type: 'bar',
         data: {
@@ -78,6 +84,17 @@
             data: Object.values(stats).map(s => s.count),
             backgroundColor: '#25D366'
           }]
+        },
+        options: {
+          responsive: true,
+          plugins: {
+            legend: { display: false }
+          },
+          scales: {
+            x: {
+              ticks: { autoSkip: false, maxRotation: 90, minRotation: 45 }
+            }
+          }
         }
       });
     });
