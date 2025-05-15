@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>WhatsApp Redirect Stats</title>
+  <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-database-compat.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    body { font-family: Arial, padding: 20px; }
+    table { border-collapse: collapse; width: 100%; }
+    th, td { padding: 10px; border: 1px solid #ddd; }
+  </style>
+</head>
+<body>
+  <h1>📊 WhatsApp Redirect Statistics</h1>
+  
+  <div style="display: flex;">
+    <div style="width: 60%;">
+      <h3>Details by Phone Number</h3>
+      <table id="statsTable">
+        <thead>
+          <tr>
+            <th>Phone Number</th>
+            <th>Redirect Count</th>
+            <th>Last Redirect</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+    <div style="width: 40%;">
+      <canvas id="chart" height="300"></canvas>
+    </div>
+  </div>
+
+  <script>
+    // Use the same firebaseConfig as the main page
+    const firebaseConfig = {
+      apiKey: "AIzaSyB1p0Q_gMsPYKL-ZIE--ZGw6pIyF7VM0Bw",
+      authDomain: "redirect-counter.firebaseapp.com",
+      databaseURL: "https://redirect-counter-default-rtdb.asia-southeast1.firebasedatabase.app",
+      projectId: "redirect-counter"
+    };
+    firebase.initializeApp(firebaseConfig);
+
+    // Fetch data from Firebase
+    firebase.database().ref('redirects').on('value', (snapshot) => {
+      const data = snapshot.val();
+      const stats = {};
+      
+      // Count redirects
+      Object.values(data).forEach(entry => {
+        if (!stats[entry.phone]) stats[entry.phone] = { count: 0, lastTime: '' };
+        stats[entry.phone].count++;
+        stats[entry.phone].lastTime = entry.timestamp;
+      });
+
+      // Display table
+      const tableBody = document.querySelector('#statsTable tbody');
+      tableBody.innerHTML = '';
+      Object.entries(stats).forEach(([phone, info]) => {
+        tableBody.innerHTML += `
+          <tr>
+            <td>${phone}</td>
+            <td>${info.count}</td>
+            <td>${new Date(info.lastTime).toLocaleString()}</td>
+          </tr>
+        `;
+      });
+
+      // Draw chart
+      new Chart(document.getElementById('chart'), {
+        type: 'bar',
+        data: {
+          labels: Object.keys(stats),
+          datasets: [{
+            label: 'Redirect Count',
+            data: Object.values(stats).map(s => s.count),
+            backgroundColor: '#25D366'
+          }]
+        }
+      });
+    });
+  </script>
+</body>
+</html>
