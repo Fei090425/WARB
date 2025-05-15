@@ -39,15 +39,6 @@
       width: 80px;
       margin-bottom: 20px;
     }
-    .cancel-btn {
-      margin-top: 20px;
-      padding: 8px 20px;
-      background: #e74c3c;
-      color: white;
-      border: none;
-      border-radius: 4px;
-      cursor: pointer;
-    }
     .counter {
       font-size: 24px;
       margin: 20px 0;
@@ -58,11 +49,9 @@
   <img src="https://upload.wikimedia.org/wikipedia/commons/6/6b/WhatsApp.svg" alt="WhatsApp Logo" class="whatsapp-logo">
   <h2>Connecting you to a WhatsApp consultant...</h2>
   <div class="loader"></div>
-  <div class="counter" id="countdown">5</div>
+  <div class="counter" id="countdown">3</div>
   <p>Please wait while we connect you to our support team</p>
   
-  <button class="cancel-btn" id="cancelRedirect">Cancel</button>
-
   <script>
     // Your Firebase Config
     const firebaseConfig = {
@@ -102,12 +91,12 @@
         phone: phone,
         timestamp: timestamp,
         userAgent: navigator.userAgent,
-        ip: "<?php echo $_SERVER['REMOTE_ADDR']; ?>" // Get IP if using PHP
+        ip: "" // IP retrieval removed since it's client-side
       });
     }
 
     // Countdown and redirect
-    let count = 5;
+    let count = 3;
     const countdownEl = document.getElementById('countdown');
     const countdownInterval = setInterval(() => {
       count--;
@@ -121,7 +110,8 @@
     function redirectToWhatsApp() {
       const randomIndex = Math.floor(Math.random() * numbers.length);
       const phone = numbers[randomIndex];
-      const redirectUrl = `https://wa.me/${phone}`;
+      const message = encodeURIComponent("I want to apply");
+      const redirectUrl = `https://wa.me/${phone}?text=${message}`;
       
       // Log to Firebase
       logRedirect(phone);
@@ -131,14 +121,6 @@
         window.location.href = redirectUrl;
       }, 300);
     }
-
-    // Cancel redirect if user clicks button
-    document.getElementById('cancelRedirect').addEventListener('click', () => {
-      clearInterval(countdownInterval);
-      document.querySelector('h2').textContent = 'Redirect cancelled';
-      document.querySelector('.loader').style.display = 'none';
-      countdownEl.style.display = 'none';
-    });
   </script>
 </body>
 </html>
